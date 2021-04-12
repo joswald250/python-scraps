@@ -1,22 +1,20 @@
-import tkinter as tk
 from tkinter import *
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import ttk
 import sys
-from guessingGame import guessingGame
+from fun.guessingGame import guessingGame
 
 global selected
 
+
 def save_file():
-    filedialog.asksaveasfile()
+    ttk.filedialog.asksaveasfile()
 
 
 def open_file():
-    filedialog.askopenfile(mode='r', initialdir="/C:/Users", filetypes=[("all files", "*.*"),
-                                                                        ("Python Files", "*.py"), ("Images",
-                                                                                                   ["*.jpeg",
-                                                                                                    "*.jpg",
-                                                                                                    "*.gif",
-                                                                                                    "*.png"])])
+    filedialog.askopenfile(mode='r', initialdir="/C:/Users", 
+                           filetypes=[("all files", "*.*"), ("Python Files", "*.py"), 
+                                                            ("Images", ["*.jpeg", "*.jpg", "*.gif",
+                                                             "*.png"])])
 
 
 def save_as_file():
@@ -206,7 +204,7 @@ class MainPage(BaseWindow):  # takes basewindow and builds on top of it
 
 
 def main():
-    root = tk.Tk()
+    root = Tk()
     gui = MainPage(root)
     root.mainloop()
 
