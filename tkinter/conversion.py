@@ -40,7 +40,7 @@ class FeetToMeters:
         feet_entry.grid(column=2, row=1, sticky=(W, E))
 
         """ Do the same as above for multiple widgets, notice the command for
-        the button widget - links to a function
+        the button widget - links to a function callback
         object (not the function itself, thus the lack of parentheses). """
 
         self.meters = tk.StringVar()

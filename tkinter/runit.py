@@ -1,127 +1,171 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox, filedialog
 
 
-class Index:
+class MainWindow():
 
-    def __init__(self, root):
-        root.title("Index")
-        system = str(root.tk.call("tk", "windowingsystem"))
+    def __init__(self, window):
+        self.window = window
+        self.system = str(window.tk.call("tk", "windowingsystem"))
 
         # Create a menu at the top
-        menubar = ClassicMenu(root)
-        root['menu'] = menubar
+        self.menubar = ClassicMenu(self.window)
+        self.window['menu'] = self.menubar
+
         # create a frame on top
-        content = ContentFrame(root)
-        content.grid(column=0, columnspan=2, row=0, sticky="nsew")
+        self.content = ContentFrame(self.window)
+        self.content.grid(column=0, columnspan=2, row=0, sticky="nsew")
+
+        # Create a seperator between the two frames
+        self.seperator = ttk.Separator(self.window, orient=tk.HORIZONTAL)
+        self.seperator.grid(row=1, column=0, columnspan=2, sticky="ew")
+
         # Create a frame on bottom with the nav buttons
-        bottomframe = NavFrame(root)
-        bottomframe.grid(column=0, columnspan=2, row=1, sticky="nsew")
+        self.bottomframe = NavFrame(self.window)
+        self.bottomframe.grid(column=0, columnspan=2, row=2, sticky="nsew")
 
         # Configure rows/columns to shrink/grow
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
-        root.columnconfigure(1, weight=1)
-
-        # Custom content for Index
-        welcome = ttk.Label(content, text="Welcome!")
-        system_text = ttk.Label(content, text=system)
-        name = tk.StringVar()
-        username = ttk.Entry(content, textvariable=name)
-
-        welcome.grid(row=1, column=2, sticky="nsew")
-        system_text.grid(row=2, column=2, sticky="nsew")
-        username.grid(row=3, column=2, sticky="nsew")
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
 
 
 class ContentFrame(ttk.Frame):
 
-    def __init__(self, frame):
-        super(ContentFrame, self).__init__()
-
-        self.configure(padding=(10, 3, 10, 3))
-
+    def __init__(self, parent):
+        super().__init__()
+        self.configure(padding=(12, 3, 3, 3))
         # Create a canvas widget inside frame widget for scrollability
-        canvas = tk.Canvas(self)
-        canvas.grid(row=0, rowspan=100, column=0, columnspan=100, sticky="nsew")
+        self.canvas = tk.Canvas(self, borderwidth=0)
+        self.canvas.grid(row=0, rowspan=1000, column=0, columnspan=1000, sticky="nsew")
         self.columnconfigure(0, weight=1)
 
+        # Create additional frame inside canvas to place actual stuff on
+        self.frame = ttk.Frame(self)
+        # Need to bind the configure event to a function that will reset the canvas scrollregion
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+        # create a window within the canvas to hold the frame
+        self.canvas.create_window(0, 0, window=self.frame, anchor="nw",
+                                  tags="self.frame")
+
         # Scrollbar
-        s = ttk.Scrollbar(self, orient=tk.VERTICAL, command=canvas.yview)
-        canvas.configure(yscrollcommand=s.set)
-        s.grid(row=0, rowspan=100, column=1000)
+        self.s = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.canvas.yview)
+        self.s.grid(row=0, rowspan=1000, column=100, sticky="ns")
+        self.canvas.configure(yscrollcommand=self.s.set)
+
+    # This function resets the canvas scroll region whenever we add something
+    def onFrameConfigure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
 
 class NavFrame(ttk.Frame):
 
-    def __init__(self, frame):
+    def __init__(self, *args, **kwargs):
         # Need a super call to initiate Frame attributes
-        super(NavFrame, self).__init__()
+        super().__init__(*args, **kwargs)
 
         self.configure(padding=(10, 3, 10, 3))
         # Back, space, next buttons
-        back_btn = ttk.Button(self, text="Back")
-        middle = tk.Canvas(self, height=50)
-        next_btn = ttk.Button(self, text="Next")
+        self.back_btn = ttk.Button(self, text="Back")
+        self.middle = tk.Canvas(self, height=30)
+        self.next_btn = ttk.Button(self, text="Next", )
         # Grid the three objects above
-        back_btn.grid(row=1, column=1, sticky="ew")
-        middle.grid(row=1, column=2, sticky="nsew")
-        next_btn.grid(row=1, column=5, sticky="ew")
+        self.back_btn.grid(row=1, column=1, sticky="ew")
+        self.middle.grid(row=1, column=2, sticky="nsew")
+        self.next_btn.grid(row=1, column=5, sticky="ew")
         # Configure the three above
         self.columnconfigure(2, weight=1)
 
 
 class ClassicMenu(tk.Menu):
 
-    def __init__(self, root):
-        super(ClassicMenu, self).__init__()
+    def __init__(self, window, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Create Menu widgets to place in menubar
-        fileMenu = tk.Menu(self)
-        editMenu = tk.Menu(self)
-        helpMenu = tk.Menu(self)
-        viewMenu = tk.Menu(self)
+        self.fileMenu = tk.Menu(self)
+        self.editMenu = tk.Menu(self)
+        self.helpMenu = tk.Menu(self)
+        self.viewMenu = tk.Menu(self)
 
         # Create cascades for each of the menu widgets
-        self.add_cascade(menu=fileMenu, label='File')
-        self.add_cascade(menu=editMenu, label='Edit')
-        self.add_cascade(menu=viewMenu, label="View")
-        self.add_cascade(menu=helpMenu, label="Help")
+        self.add_cascade(menu=self.fileMenu, label='File')
+        self.add_cascade(menu=self.editMenu, label='Edit')
+        self.add_cascade(menu=self.viewMenu, label="View")
+        self.add_cascade(menu=self.helpMenu, label="Help")
 
         # File menu commands
-        fileMenu.add_command(label='New', command=self.newFile)
-        fileMenu.add_command(label='Open...', command=self.openFile)
-        fileMenu.add_command(label='Close', command=self.closeFile)
+        self.fileMenu.add_command(label='New', command=self.newFile)
+        self.fileMenu.add_command(label='Open...', command=self.openFile)
+        self.fileMenu.add_command(label='Close', command=self.closeFile)
+        self.fileMenu.add_command(label="Save As", command=self.saveAsFile)
 
         # Edit menu commands
-        editMenu.add_command(label='Clear',
-                             command=lambda: root.focus_get().event_generate("<<Clear>>"))
-        editMenu.add_command(label='Cut', accelerator='Ctrl + X',
-                             command=lambda: root.focus_get().event_generate("<<Cut>>"))
-        editMenu.add_command(label='Copy', accelerator="Ctrl + C",
-                             command=lambda: root.focus_get().event_generate("<<Copy>>"))
-        editMenu.add_command(label='Paste', accelerator="Ctrl + V",
-                             command=lambda: root.focus_get().event_generate("<<Paste>>"))
-        editMenu.add_command(label='Undo', accelerator="Ctrl + Z",
-                             command=lambda: root.event_generate("<<Undo>>"))
-        editMenu.add_command(label='Redo', accelerator="Ctrl + Y",
-                             command=lambda: root.event_generate("<<Redo>>"))
+        self.editMenu.add_command(label='Clear',
+                                  command=lambda: window.focus_get().event_generate("<<Clear>>"))
+        self.editMenu.add_command(label='Cut', accelerator='Ctrl + X',
+                                  command=lambda: window.focus_get().event_generate("<<Cut>>"))
+        self.editMenu.add_command(label='Copy', accelerator="Ctrl + C",
+                                  command=lambda: window.focus_get().event_generate("<<Copy>>"))
+        self.editMenu.add_command(label='Paste', accelerator="Ctrl + V",
+                                  command=lambda: window.focus_get().event_generate("<<Paste>>"))
+        self.editMenu.add_command(label='Undo', accelerator="Ctrl + Z",
+                                  command=lambda: window.event_generate("<<Undo>>"))
+        self.editMenu.add_command(label='Redo', accelerator="Ctrl + Y",
+                                  command=lambda: window.event_generate("<<Redo>>"))
 
     def newFile(self):
         pass
 
-    def openFile(self):
-        tk.ask_filedialog
+    def openFile(self, multiple=False):
+        filedialog.askopenfile(title='Open File', parent=self)
 
     def closeFile(self):
         pass
 
+    def saveAsFile(self):
+        filedialog.asksaveasfile(title="Save As", parent=self)
+
+
+# Defines what the next button does in the nav menu
+def nextButton(on_click: tk.Tk, close: tk.Tk):
+    on_click
+    close
+
+
+# How to stop root when it is withdrawn
+def onClose():
+    if messagebox.askokcancel("Quit", "Would you like to close the entire application?"):
+        root.destroy()
+
 
 # Actually running the script
 def main():
+    global root
     root = tk.Tk()
+    # tearOff prevents menus from being "torn off" into their own windows
     root.option_add('*tearOff', tk.FALSE)
-    Index(root)
+    # root.withdraw()
+    base = MainWindow(root)
+
+    """window = tk.Toplevel()
+    window.protocol("WM_DELETE_WINDOW", onClose)
+    base = MainWindow(window)"""
+    # Custom self.content for Index
+    base.window.title("Index")
+    welcome = ttk.Label(base.content, text="Welcome! Please enter your name below:")
+    name = tk.StringVar()
+    username = ttk.Entry(base.content, textvariable=name, width=10)
+
+    for i in range(100):
+        button = ttk.Button(base.content, text=i)
+        button.grid(row=i+3, column=0)
+
+    # Grid the above
+    welcome.grid(row=1, column=1, sticky="nsew")
+    username.grid(row=2, column=0, columnspan=3, sticky="nsew")
+
+    # Start the mainloop
     root.mainloop()
 
 
