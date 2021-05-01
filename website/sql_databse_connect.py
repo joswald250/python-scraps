@@ -16,12 +16,14 @@ mysql = MySQL(app)
 def users():
     if request.method == "POST":
         cur = mysql.connection.cursor()
-        cur.execute('INSERT INTO accounts(username, password, creation_datetime, email) VALUES ({}, {}, {})'.format('username', 'password', datetime.datetime))
+        cur.execute('INSERT INTO accounts(username, password, creation_datetime, email)
+                    VALUES ({}, {}, {})'.format('username', 'password', datetime.datetime))
         mysql.connection.commit()
         rv = cur.fetchall()
         cur.close()
         return str(rv)
     return render_template('login.html')
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

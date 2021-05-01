@@ -29,14 +29,14 @@ print(even_squares)
 """ You can have multiple if statements in a list comprehension, simply add another if statement after the
 first, with no syntax in between (other than whitespace). This is a silly example, but you get the point. """
 
-foursquare = [x*x for x in range(10) if x%2 == 0 if x%4 == 0]
+foursquare = [x*x for x in range(10) if x % 2 == 0 if x % 4 == 0]
 
 print(foursquare)
 
 """ If Else - you can also add other clauses to the list comprehension. However, if so, you must move
 the conditional clause to right after the first expression and before the for statement. """
 
-keepunevensquares = [ x*x if x%2 == 0 else x for x in range(10) ]
+keepunevensquares = [x * x if x % 2 == 0 else x for x in range(10)]
 
 print(keepunevensquares)
 

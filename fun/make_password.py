@@ -2,14 +2,15 @@ import random
 import re
 import string
 
+
 def generate_password(num=15, punctuation=True):
     word = ""
     i = 0
     for i in range(0, num):
         if punctuation is False:
-            temp = random.choice([1,3])
+            temp = random.choice([1, 3])
         else:
-            temp = random.choice([1,2,3])
+            temp = random.choice([1, 2, 3])
         if temp == 1:
             word += random.choice(string.ascii_letters)
         elif temp == 2:
@@ -26,4 +27,3 @@ def generate_password(num=15, punctuation=True):
 
 
 password = generate_password()
-print(password)

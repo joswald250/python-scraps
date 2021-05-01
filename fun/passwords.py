@@ -6,6 +6,7 @@ import password_cache as pwc
         self.username = username
         self.password = add_password(self.username)'''
 
+
 def check_user(username):
     i = 0
     my_list_of_usernames = u.list_of_usernames
@@ -17,7 +18,6 @@ def check_user(username):
 
 
 def add_password(user, password):
-    i = 0
     my_list_of_passwords = pwc.list_of_passwords
     my_list_of_usernames = u.list_of_usernames
     if check_user(user):
@@ -34,6 +34,7 @@ def add_password(user, password):
         passwords_file.close()
         return True
 
+
 def validate_password(username, password):
     i = 0
     my_list_of_passwords = pwc.list_of_passwords
@@ -48,4 +49,3 @@ def validate_password(username, password):
         else:
             valid = False
     return valid
-
