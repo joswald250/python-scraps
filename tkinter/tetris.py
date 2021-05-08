@@ -1,5 +1,3 @@
-#! usr/bin/python3
-
 import random
 
 import tkinter as tk
@@ -86,8 +84,8 @@ class Piece():
 class Tetris():
 
     # Game-wide variables
-    GAME_WIDTH = 350
-    GAME_HEIGHT = 450
+    GAME_WIDTH = 360
+    GAME_HEIGHT = 480
     GAME_SPEED = 500
     BLOCK_SIZE = 15
 
@@ -138,7 +136,7 @@ class Tetris():
     def start_game(self):
         # will be a mainloop
         self.canvas = self.create_canvas()
-        Piece(self.canvas, [20, 30], self.SQUARE)
+        Piece(self.canvas, [280, 16], self.SQUARE)
         Piece(self.canvas, piece_shape=self.LINE)
         self.root.after(self.GAME_SPEED, None)
         self.root.mainloop()
@@ -146,22 +144,28 @@ class Tetris():
     def set_controls(self, event):
         if event.keysym == "Left":  # Left Arrow
             # Returns True/False depending upon ability to move
-            ok_to_move = self.check_move([-10, 0])
+            ok_to_move = self.check_move([-self.BLOCK_SIZE, 0])
             if ok_to_move:
                 active_piece = self.canvas.find_withtag("active")
                 # Finds all objects with "active" tag, then for each block, moves them
                 for block_id in active_piece:
-                    self.canvas.move(block_id, -10, 0)
+                    self.canvas.move(block_id, -self.BLOCK_SIZE, 0)
+            self.check_below()
         if event.keysym == "Up":  # Up Arrow
             pass
         if event.keysym == "Down":
-            pass
+            active_piece = self.canvas.find_withtag("active")
+            # Finds all objects with "active" tag, then for each block, moves them
+            for block_id in active_piece:
+                self.canvas.move(block_id, 0, self.BLOCK_SIZE)
+            self.check_below()
         if event.keysym == "Right":  # Right Arrow
-            ok_to_move = self.check_move([10, 0])
+            ok_to_move = self.check_move([self.BLOCK_SIZE, 0])
             if ok_to_move:
                 active_piece = self.canvas.find_withtag("active")
                 for block_id in active_piece:
-                    self.canvas.move(block_id, 10, 0)
+                    self.canvas.move(block_id, self.BLOCK_SIZE, 0)
+            self.check_below()
 
     def create_canvas(self):
         # create the canvas which will actually house the game
@@ -173,50 +177,61 @@ class Tetris():
     def check_move(self, coords_change=[]):
         # Will return False if the move brings the piece in contact with a boundary
         active_piece = self.canvas.find_withtag("active")  # Find piece
-        # Sets variables that will be checked
-        x_min = self.GAME_WIDTH
-        x_max = 0
-        y_max = self.GAME_HEIGHT  # Y value increases as piece goes down
-        piece_ids = []  # Going to be used to compare with overlapping blocks
+        can_move = False
         for block_id in active_piece:
-            piece_ids.append(block_id)
             # For each block, get its coordinates
             block_coords = self.canvas.coords(block_id)
             x_left = block_coords[0]
             y_top = block_coords[1]
             x_right = block_coords[2]
             y_bottom = block_coords[3]
-            # Then check if that coordinate is a min/max
-            if x_left < x_min:
-                x_min = x_left
-            if y_bottom < y_max:
-                y_max = y_bottom
-            if x_right > x_max:
-                x_max = x_right
-        # All coordinates with the coordinate change factored in
-        x_left_new = x_min + coords_change[0]
-        y_top_new = y_top + coords_change[1]
-        x_right_new = x_max + coords_change[0]
-        y_bottom_new = y_max + coords_change[1]
-        # Going to create a box with coordinate change factored in to
-        # check if that box is tangent to any other piece
-        overlapping = self.canvas.find_overlapping(
-                                    x_left_new,
-                                    y_top_new,
-                                    x_right_new,
-                                    y_bottom_new)
+            # All coordinates with the coordinate change factored in
+            x_left_new = x_left + coords_change[0]
+            y_top_new = y_top + coords_change[1]
+            x_right_new = x_right + coords_change[0]
+            y_bottom_new = y_bottom + coords_change[1]
+            # Going to create a box with coordinate change factored in to
+            # check if that box is tangent to any other piece
+            # Subtract 1 b/c canvas automatically adds 1 to box size when it makes it
+            overlapping = self.canvas.find_overlapping(
+                                        x_left_new + 1,
+                                        y_top_new,
+                                        x_right_new - 1,
+                                        y_bottom_new)
         # Add the expected coordinate changes to mins/maxes and check
-        if x_left_new < 0 or \
-            y_bottom_new >= self.GAME_HEIGHT or \
-                x_right_new > self.GAME_WIDTH or \
-                any(overlapping) not in piece_ids:  # box automatically includes pieces in it
-            print(x_left_new)
-            print(y_bottom_new)
-            print(x_right_new)
-            print(False)
-            return False
-        else:
-            return True
+            for i in range(len(overlapping)):
+                if overlapping[i] not in active_piece or x_left_new < 0 \
+                   or y_bottom_new >= self.GAME_HEIGHT or x_right_new > self.GAME_WIDTH:
+                    print(overlapping)
+                    can_move = False
+                    break
+                else:
+                    can_move = True
+        print(can_move)
+        return can_move
+
+    def check_below(self):
+        # Will return True if another piece is below
+        active_piece = self.canvas.find_withtag("active")  # Find piece
+        for block_id in active_piece:
+            # For each block, get its coordinates
+            block_coords = self.canvas.coords(block_id)
+            x_left = block_coords[0]
+            y_top = block_coords[1]
+            x_right = block_coords[2]
+            y_bottom = block_coords[3]
+            # Going to find if any pieces are tangent to bottom coordinates
+            overlapping = self.canvas.find_overlapping(
+                                        (x_left + 1),
+                                        y_top,
+                                        (x_right - 1),
+                                        y_bottom)
+            for i in range(len(overlapping)):
+                if overlapping[i] not in active_piece:
+                    print("piece being deactivated")
+                    for block_id in active_piece:
+                        self.canvas.dtag(block_id, "active")
+                    print("piece deactivated")
 
 
 def main():
